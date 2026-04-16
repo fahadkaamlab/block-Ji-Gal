@@ -6,7 +6,7 @@ export default function App() {
   const [isProxying, setIsProxying] = useState(false);
   const [proxyUrl, setProxyUrl] = useState('');
   const [isMuted, setIsMuted] = useState(true);
-  const [isAdblockEnabled, setIsAdblockEnabled] = useState(true);
+  const [isPopupBlockEnabled, setIsPopupBlockEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [latency, setLatency] = useState(14);
   const [throughput, setThroughput] = useState(4.2);
@@ -32,7 +32,7 @@ export default function App() {
     
     // Persist configurations in cookie for the proxy to read
     document.cookie = `bypass_muted=${isMuted}; path=/; max-age=3600`;
-    document.cookie = `bypass_adblock=${isAdblockEnabled}; path=/; max-age=3600`;
+    document.cookie = `bypass_popups=${isPopupBlockEnabled}; path=/; max-age=3600`;
     
     setProxyUrl(`/proxy/${sanitizedUrl}`);
     setIsProxying(true);
@@ -112,7 +112,7 @@ export default function App() {
             src={proxyUrl} 
             className="w-full h-full border-none bg-white"
             onLoad={handleIframeLoad}
-            sandbox={`allow-same-origin allow-scripts allow-forms ${isAdblockEnabled ? '' : 'allow-popups allow-modals'}`}
+            sandbox={`allow-same-origin allow-scripts allow-forms ${isPopupBlockEnabled ? '' : 'allow-popups allow-modals'}`}
             title="Proxy View"
           />
         </div>
@@ -231,15 +231,15 @@ export default function App() {
                 <input 
                   type="checkbox" 
                   className="hidden" 
-                  checked={isAdblockEnabled} 
-                  onChange={() => setIsAdblockEnabled(!isAdblockEnabled)} 
+                  checked={isPopupBlockEnabled} 
+                  onChange={() => setIsPopupBlockEnabled(!isPopupBlockEnabled)} 
                 />
-                <div className={`w-6 h-6 border-2 flex items-center justify-center transition-all ${isAdblockEnabled ? 'border-[#CCFF00] bg-[#CCFF00]' : 'border-[#333] group-hover:border-[#CCFF00]'}`}>
-                  {isAdblockEnabled && <Ban size={14} className="text-black" />}
+                <div className={`w-6 h-6 border-2 flex items-center justify-center transition-all ${isPopupBlockEnabled ? 'border-[#CCFF00] bg-[#CCFF00]' : 'border-[#333] group-hover:border-[#CCFF00]'}`}>
+                  {isPopupBlockEnabled && <Ban size={14} className="text-black" />}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] uppercase tracking-[2px] font-black">AdBlock</span>
-                  <span className="text-[8px] uppercase tracking-[1px] opacity-50">Block Ads & Pop-ups</span>
+                  <span className="text-[11px] uppercase tracking-[2px] font-black">Block Pop-ups</span>
+                  <span className="text-[8px] uppercase tracking-[1px] opacity-50">Prevent new windows</span>
                 </div>
               </label>
             </div>

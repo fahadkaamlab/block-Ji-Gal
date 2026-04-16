@@ -8,13 +8,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // API routes FIRST
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
-  });
+  app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
   app.use("/proxy", async (req, res) => {
-    // Extract the target URL more robustly
     const fullPath = req.originalUrl;
     const proxyPrefix = "/proxy/";
     const prefixIndex = fullPath.indexOf(proxyPrefix);
@@ -25,7 +21,6 @@ async function startServer() {
 
     let targetUrl = fullPath.substring(prefixIndex + proxyPrefix.length);
     
-    // Handle cases where the URL might be missing the protocol double slash due to some parsers
     if (targetUrl.startsWith('http:/') && !targetUrl.startsWith('http://')) {
       targetUrl = targetUrl.replace('http:/', 'http://');
     } else if (targetUrl.startsWith('https:/') && !targetUrl.startsWith('https://')) {
@@ -79,7 +74,6 @@ async function startServer() {
         if (val) res.setHeader(h, val);
       });
       
-      // Specifically remove security headers if they leaked through (though we use a whitelist)
       res.removeHeader('X-Frame-Options');
       res.removeHeader('Content-Security-Policy');
       res.removeHeader('Content-Security-Policy-Report-Only');
@@ -89,7 +83,6 @@ async function startServer() {
         let html = await response.text();
         const $ = cheerio.load(html);
         
-        // Base URL handling
         const base = $('base').attr('href');
         const effectiveBaseUrl = base ? new URL(base, targetUrl).href : targetUrl;
 
@@ -119,25 +112,16 @@ async function startServer() {
           `);
         }
 
-        const isAdblockEnabled = req.headers.cookie?.includes('bypass_adblock=true');
-        if (isAdblockEnabled) {
-          // Remove obvious ad containers using Cheerio
-          const adSelectors = [
-            '.ad', '.ads', '.ad-container', '.adsbox', '.ad-slot', 
-            '[id^="google_ads"]', '[id*="taboola"]', '[class*="sponsored"]',
-            'iframe[src*="doubleclick"]', 'iframe[src*="ads"]',
-            'script[src*="doubleclick"]', 'script[src*="adsystem"]', 'script[src*="googlesyndication"]'
-          ];
-          $(adSelectors.join(', ')).remove();
-
-          // Programmatically block popups as an extra precaution
+        const isPopupBlocked = req.headers.cookie?.includes('bypass_popups=true');
+        if (isPopupBlocked) {
           $('head').prepend(`
             <script>
               (function() {
-                window.open = function() { console.warn("Bypass.Core: Pop-up blocked."); return null; };
-                window.alert = function() { console.warn("Bypass.Core: Alert blocked."); };
-                window.confirm = function() { console.warn("Bypass.Core: Confirm blocked."); return false; };
-                window.prompt = function() { console.warn("Bypass.Core: Prompt blocked."); return null; };
+                const noop = function() { console.warn("Bypass.Core: Blocked action."); return null; };
+                window.open = noop;
+                window.alert = noop;
+                window.confirm = function() { return false; };
+                window.prompt = noop;
               })();
             </script>
           `);
@@ -168,7 +152,6 @@ async function startServer() {
           if (action) $(el).attr('action', rewriteUrl(action));
         });
 
-        // Inject a script to help with dynamic requests
         $('head').append(`
           <script>
             (function() {
@@ -221,7 +204,6 @@ async function startServer() {
     }
   });
 
-  // Catch-all for absolute path requests from the proxy iframe
   app.use((req, res, next) => {
     const referer = req.headers.referer;
     if (referer && referer.includes('/proxy/')) {
@@ -235,7 +217,6 @@ async function startServer() {
     next();
   });
 
-  // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
