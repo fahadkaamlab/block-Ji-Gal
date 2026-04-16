@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Globe, Zap, Lock, ArrowLeft, RotateCcw, Monitor, Terminal, Activity, Menu, Globe2, Coffee } from 'lucide-react';
+import { Shield, Globe, Zap, Lock, ArrowLeft, RotateCcw, Monitor, Terminal, Activity, Menu, Globe2, Coffee, Ban } from 'lucide-react';
 
 export default function App() {
   const [url, setUrl] = useState('');
   const [isProxying, setIsProxying] = useState(false);
   const [proxyUrl, setProxyUrl] = useState('');
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isAdblockEnabled, setIsAdblockEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [latency, setLatency] = useState(14);
   const [throughput, setThroughput] = useState(4.2);
@@ -29,8 +30,9 @@ export default function App() {
       sanitizedUrl = 'https://' + sanitizedUrl;
     }
     
-    // Persist mute state in cookie for the proxy to read
+    // Persist configurations in cookie for the proxy to read
     document.cookie = `bypass_muted=${isMuted}; path=/; max-age=3600`;
+    document.cookie = `bypass_adblock=${isAdblockEnabled}; path=/; max-age=3600`;
     
     setProxyUrl(`/proxy/${sanitizedUrl}`);
     setIsProxying(true);
@@ -110,7 +112,7 @@ export default function App() {
             src={proxyUrl} 
             className="w-full h-full border-none bg-white"
             onLoad={handleIframeLoad}
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+            sandbox={`allow-same-origin allow-scripts allow-forms ${isAdblockEnabled ? '' : 'allow-popups allow-modals'}`}
             title="Proxy View"
           />
         </div>
@@ -222,6 +224,22 @@ export default function App() {
                 <div className="flex flex-col">
                   <span className="text-[11px] uppercase tracking-[2px] font-black">Silent Mode</span>
                   <span className="text-[8px] uppercase tracking-[1px] opacity-50">Auto-mute Audio/Video</span>
+                </div>
+              </label>
+
+              <label className="flex items-center gap-4 cursor-pointer text-[#666] hover:text-[#CCFF00] transition-colors group">
+                <input 
+                  type="checkbox" 
+                  className="hidden" 
+                  checked={isAdblockEnabled} 
+                  onChange={() => setIsAdblockEnabled(!isAdblockEnabled)} 
+                />
+                <div className={`w-6 h-6 border-2 flex items-center justify-center transition-all ${isAdblockEnabled ? 'border-[#CCFF00] bg-[#CCFF00]' : 'border-[#333] group-hover:border-[#CCFF00]'}`}>
+                  {isAdblockEnabled && <Ban size={14} className="text-black" />}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] uppercase tracking-[2px] font-black">AdBlock</span>
+                  <span className="text-[8px] uppercase tracking-[1px] opacity-50">Block Ads & Pop-ups</span>
                 </div>
               </label>
             </div>

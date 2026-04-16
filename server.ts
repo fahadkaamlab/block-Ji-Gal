@@ -119,6 +119,30 @@ async function startServer() {
           `);
         }
 
+        const isAdblockEnabled = req.headers.cookie?.includes('bypass_adblock=true');
+        if (isAdblockEnabled) {
+          // Remove obvious ad containers using Cheerio
+          const adSelectors = [
+            '.ad', '.ads', '.ad-container', '.adsbox', '.ad-slot', 
+            '[id^="google_ads"]', '[id*="taboola"]', '[class*="sponsored"]',
+            'iframe[src*="doubleclick"]', 'iframe[src*="ads"]',
+            'script[src*="doubleclick"]', 'script[src*="adsystem"]', 'script[src*="googlesyndication"]'
+          ];
+          $(adSelectors.join(', ')).remove();
+
+          // Programmatically block popups as an extra precaution
+          $('head').prepend(`
+            <script>
+              (function() {
+                window.open = function() { console.warn("Bypass.Core: Pop-up blocked."); return null; };
+                window.alert = function() { console.warn("Bypass.Core: Alert blocked."); };
+                window.confirm = function() { console.warn("Bypass.Core: Confirm blocked."); return false; };
+                window.prompt = function() { console.warn("Bypass.Core: Prompt blocked."); return null; };
+              })();
+            </script>
+          `);
+        }
+
         const rewriteUrl = (originalUrl: string) => {
           if (!originalUrl || originalUrl.startsWith('data:') || originalUrl.startsWith('blob:') || originalUrl.startsWith('#') || originalUrl.startsWith('javascript:')) return originalUrl;
           try {
