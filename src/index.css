@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-dark: #080808;
+  --color-accent: #CCFF00;
+  --color-border-dark: #222222;
+  --color-text-muted: #666666;
+  --color-text-darker: #444444;
+  --color-text-light: #888888;
+  --font-sans: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Space Mono', 'Courier New', Courier, monospace;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: #FFFFFF;
+}
